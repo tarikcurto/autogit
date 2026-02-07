@@ -14,7 +14,7 @@ Example `config.json`:
 {
   "repos": [
     {
-      "path": "/mnt/c/Users/Tarik Curto/Documents/Obsidian/TCC",
+      "path": "/mnt/c/Users/user1/Documents/Obsidian/Homework",
       "remote": "origin",
       "branch": "master",
       "message": "Auto-sync {timestamp}",
