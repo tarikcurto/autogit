@@ -53,7 +53,7 @@ echo "$CURRENT_CRONTAB" | {
 
 echo "[OK] autogit cron job installed successfully."
 echo ""
-echo "Schedule: $CRON_SCHEDULE (Every 5 minutes)"
+echo "Schedule: $CRON_SCHEDULE"
 echo "Script: $SCRIPT_PATH"
 echo "Config: $CONFIG_PATH"
 echo "Logs: /tmp/autogit.log"
