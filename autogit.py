@@ -53,6 +53,18 @@ def git_has_changes(repo: Path) -> bool:
     return out.strip() != ""
 
 
+def git_has_staged_changes(repo: Path) -> bool:
+    rc, out = run_capture(["git", "diff", "--cached", "--quiet"], repo)
+    # rc = 0 => no staged changes
+    # rc = 1 => staged changes exist
+    # rc >1 => error
+    if rc == 0:
+        return False
+    if rc == 1:
+        return True
+    raise RuntimeError(f"git diff --cached failed in {repo}:\n{out}")
+
+
 def build_git_add_cmd(excludes: Optional[List[str]]) -> List[str]:
     # git pathspec magic: :(exclude,glob)pat
     cmd = ["git", "add", "-A", "--", "."]
@@ -104,7 +116,23 @@ def sync_repo(repo_cfg: RepoCfg, g: GlobalCfg, timestamp: str, dry_run: bool) ->
         print(f"[WARN] Does not appear to be a git repo (no .git): {repo}")
         return 1
 
-    # 1) Add with excludes
+    # Pull (optional)
+    if g.pull_rebase:
+        fetch_cmd = ["git", "fetch", repo_cfg.remote]
+        pull_cmd = ["git", "pull", "--rebase", "--autostash", repo_cfg.remote, repo_cfg.branch]
+        if dry_run:
+            print(f"[DRY] {' '.join(fetch_cmd)}")
+            print(f"[DRY] {' '.join(pull_cmd)}")
+        else:
+            # fetch non-critical
+            run_capture(fetch_cmd, repo)
+            rc, out = run_capture(pull_cmd, repo)
+            if rc != 0:
+                print(f"[WARN] git pull failed. Check for conflicts.\n{out}")
+                return 1
+            print("[OK] Pull done.")
+
+    # Add with excludes
     add_cmd = build_git_add_cmd(repo_cfg.excludes)
     if dry_run:
         print(f"[DRY] {' '.join(add_cmd)}")
@@ -114,15 +142,20 @@ def sync_repo(repo_cfg: RepoCfg, g: GlobalCfg, timestamp: str, dry_run: bool) ->
             print(f"[WARN] git add failed:\n{out}")
             return 1
 
-    # 2) Changes?
-    if not git_has_changes(repo):
-        if g.commit_if_no_changes:
-            print("[OK] No changes, but commit_if_no_changes=true (not recommended).")
-        else:
-            print("[OK] No changes. Skip.")
-            return 0
+    # Changes?
+    # if not git_has_changes(repo):
+    #     if g.commit_if_no_changes:
+    #         print("[OK] No changes, but commit_if_no_changes=true (not recommended).")
+    #     else:
+    #         print("[OK] No changes. Skip.")
+    #         return 0
+    if git_has_staged_changes(repo):
+        print("[OK] Changes detected to commit.")
+    else:
+        print("[OK] No changes to commit (after applying excludes). Skip.")
+        return 0
 
-    # 3) Commit
+    # Commit
     msg = repo_cfg.message.replace("{timestamp}", timestamp)
     commit_cmd = ["git", "commit", "-m", msg]
 
@@ -135,20 +168,7 @@ def sync_repo(repo_cfg: RepoCfg, g: GlobalCfg, timestamp: str, dry_run: bool) ->
             return 1
         print("[OK] Commit done.")
 
-    # 4) Pull (optional)
-    if g.pull_rebase:
-        if dry_run:
-            print(f"[DRY] git fetch {repo_cfg.remote}")
-            print(f"[DRY] git pull {repo_cfg.remote} {repo_cfg.branch}")
-        else:
-            # fetch non-critical
-            run_capture(["git", "fetch", repo_cfg.remote], repo)
-            rc, out = run_capture(["git", "pull", repo_cfg.remote, repo_cfg.branch], repo)
-            if rc != 0:
-                print(f"[WARN] git pull failed. Check for conflicts.\n{out}")
-                return 1
-            print("[OK] Pull done.")
-    # 5) Push (optional)
+    # Push
     if g.push:
         push_cmd = ["git", "push", repo_cfg.remote, repo_cfg.branch]
         if dry_run:
