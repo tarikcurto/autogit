@@ -40,13 +40,16 @@ python autogit.py --dry-run
 ```
 
 
-## Cron installing
+## CRON Management
+
+The `install_cron.sh` script can be used to set up a cron job that runs the AutoGIT script at regular intervals. 
+
+To install the cron job, simply run:
 
 ```bash
 ./install_cron.sh
 ```
 
-## Cron management
 To manage your cron jobs, you can use the following commands:
 
 ```bash
