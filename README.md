@@ -28,9 +28,36 @@ Example `config.json`:
 ```
 
 ## Usage
-1. Run the `autogit.py` script. It will read the configuration, check for changes in the specified repositories, and if there are any, it will commit and push them to the remote repository.
+
+```bash
+python autogit.py
+
+# - or -
+python autogit.py --config /path/to/your/config.json
+
+# - or - 
+python autogit.py --dry-run
+```
+
 
 ## Cron installing
-To set up AutoGIT to run automatically at regular intervals using cron, follow these steps:
-1. Use the script `install-cron.sh` to install the cron job. This script will add an entry to your crontab that runs the `autogit.py` script at the desired frequency.
-2. You can customize the frequency by editing the cron entry.
+
+```bash
+./install_cron.sh
+```
+
+## Cron management
+To manage your cron jobs, you can use the following commands:
+
+```bash
+# Edit the crontab
+crontab -e
+
+# Check the status of the cron jobs
+crontab -l
+
+# See crontab logs
+sudo grep "[CRON]" /var/log/syslog
+---
+
+
