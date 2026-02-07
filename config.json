@@ -1,0 +1,21 @@
+{
+  "repos": [
+    {
+      "path": "YOUR_REPO_PATH",
+      "remote": "origin",
+      "branch": "master",
+      "message": "Auto-sync {timestamp}",
+      "excludes": [
+        ".obsidian/**",
+        ".trash/**",
+        ".DS_Store",
+        "**/*.tmp"
+      ]
+    }
+  ],
+  "global": {
+    "pull_rebase": true,
+    "push": true,
+    "commit_if_no_changes": false
+  }
+}
